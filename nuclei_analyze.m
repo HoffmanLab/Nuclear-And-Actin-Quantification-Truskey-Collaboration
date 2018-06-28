@@ -1,4 +1,4 @@
-function col_labels = blob_analyze(bases,FRETeff,sizemin,sizemax,outname,maskchannel,folder)
+function col_labels = nuclei_analyze(bases,sizemin,sizemax,outname,folder)
 
 % A function to analyze the same blobs across images from different
 % channels using a provided mask.
@@ -7,11 +7,9 @@ function col_labels = blob_analyze(bases,FRETeff,sizemin,sizemax,outname,maskcha
 %   image channel that you would like to analyze separated by commas, with
 %   the last one being the regular expression for the masks (can use the
 %   results of fa_gen)
-%   FRETeff - indicates whether FRET efficiency was calculated previously
 %   sizemin - minimum acceptable size for a structure in a mask
 %   sizemax - maximum acceptable size for a structure in a mask
 %   outname - name of the output file containing the data for each structure
-%   maskchannel - channel in which masks were generated
 %   folder - name of the folder containing the images
 % Outputs:
 %   blb file
@@ -60,9 +58,6 @@ nt = szn(1);
 dims = size(double(imread(imgn{1,1})));
 
 resind = 4*(nch-1)+2;
-if strcmpi(FRETeff,'y')
-    resind = resind + 1;
-end
 
 szstr = resind+1;
 ecstr = resind+2;
@@ -73,10 +68,6 @@ tstr = resind+5;
 res = zeros(1,resind+5);
 col_labels = cell(1,resind+5);
 sres = [];
-
-if strcmpi(FRETeff,'y')
-    lookup = load('freteff_force_lookup.txt');
-end
 
 for i = 1:nt
     starr = zeros(dims(1),dims(2),nch-1);
@@ -130,22 +121,6 @@ for i = 1:nt
                 col_labels{2*(nch-1)+2*(k-1)+3} = [bases{k}(1:3) ' Mean'];
                 col_labels{2*(nch-1)+2*(k-1)+4} = [bases{k}(1:3) ' STD'];
             end
-            if k == nch-1 && strcmpi(FRETeff,'y')
-                effs = res(2*(nch-1)+2*(k-1)+4);
-                forces = zeros(1,length(effs));
-                for m = 1:length(effs)
-                    if effs(m) < min(lookup(:,1))
-                        effs(m) = min(lookup(:,1));
-                    elseif effs(m) > max(lookup(:,1))
-                        effs(m) = max(lookup(:,1));
-                    end
-                    forces(m) = lookup(round(effs(m),4) == lookup(:,1),2);
-                end
-                res(2*(nch-1)+2*(k-1)+5) = forces;
-                if i == 1
-                    col_labels{2*(nch-1)+2*(k-1)+5} = 'Force';
-                end
-            end
         end
         if nwnz > 3;
             ysh = xind-res(2); % To match Brent's calculation
@@ -198,14 +173,6 @@ for i = 1:nt
                     starr(xind(m),yind(m),k+1) = res(2*(nch-1)+2*(k-1)+5);
                 end
             end
-        end
-    end
-    for k = 1:nch-1
-        name = fullfile(folder,'Average Images',['avg_on_' maskchannel '_' imgn{i,k}]);
-        imwrite2tif(starr(:,:,k),[],name,'single')
-        if k == nch-1 && strcmp('FRETeff','y')
-            name = fullfile(folder,'Average Images',['avg_on_' maskchannel '_force_' imgn{i,k}]);
-            imwrite2tif(starr(:,:,k+1),[],name,'single')
         end
     end
 end

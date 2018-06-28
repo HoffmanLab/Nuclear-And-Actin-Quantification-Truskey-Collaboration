@@ -32,36 +32,23 @@ else
 end
 ProcessParamsFile;
 
-%% Pre-process
+%% Manual Background Subtraction and Auto Contrasting
+addpath(folder);
 rehash
 PreProcessDAPI_only
 
-%% Calculate Blur Factor (directional Derivative)
-rehash
-DD_only
-
 %% Segmentation
+rehash
 if strcmpi(segmentation,'y')
     if strcmpi(structure,'Nuclei')
         NucleiSeg_only
     end
 end
 
-%% Mask Images
-if strcmpi(mask,'y')
-    if strcmpi(structure,'Nuclei') && strcmpi(segmentation,'y')
-        NucleiMask_only
-    end
-end
-
 %% Blob Analysis
+rehash
 if strcmpi(segmentation,'y') && strcmpi(banalyze,'y') 
     if strcmpi(structure,'Nuclei')
         NucleiAnalyze_only
     end
-end
-
-%% Draw Boundariescc
-if strcmpi(orientation_props,'y')
-    OrientationProps_only
 end
